@@ -1,0 +1,59 @@
+# =====================
+# Python / Backend
+# =====================
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.pyd
+*.pyo
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.so
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# =====================
+# Node / Frontend
+# =====================
+node_modules/
+dist/
+.next/
+out/
+.nuxt/
+
+# =====================
+# OS / Editor
+# =====================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+*.suo
+*.user
+
+# =====================
+# Logs & temp
+# =====================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =====================
+# Large / Binary
+# =====================
+*.pyd
+*.dll
+*.lib
+*.exp
+*.pdb

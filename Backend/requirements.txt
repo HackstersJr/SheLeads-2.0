@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+firebase-admin
+langchain
+langchain-google-genai
+shapely
+pydantic
+websockets
+python-dotenv
