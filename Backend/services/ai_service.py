@@ -35,7 +35,13 @@ class StructuredAgentResponse(BaseModel):
 
 # ── Mock Farm Registry (used as context for the LLM) ──────────────────────────
 
-FARM_REGISTRY = """Farms: A=Cotton(2.5ac,pH6.8,moist42%,needs water) B=Wheat(1.8ac,pH7.1,moist68%,healthy) C=Rice(3ac,pH6.5,moist80%,harvest in 2wk). Latest drone: A(today) B(yesterday)"""
+FARM_REGISTRY = """
+Farmer's Registered Farms:
+1. Farm A (farm_a) – Cotton crop, 2.5 acres, pH 6.8, moisture 42% → Status: Needs water urgently
+2. Farm B (farm_b) – Wheat crop, 1.8 acres, pH 7.1, moisture 68% → Status: Healthy
+3. Farm C (farm_c) – Rice crop, 3.0 acres, pH 6.5, moisture 80% → Status: Healthy, ready to harvest in 2 weeks
+Latest drone image available for: Farm A (taken today), Farm B (taken yesterday)
+"""
 
 # ── AI Service ─────────────────────────────────────────────────────────────────
 
@@ -43,24 +49,32 @@ class AIService:
     def __init__(self):
         api_key = os.getenv("GEMINI_API_KEY", "dummy_key")
         self.llm = ChatGoogleGenerativeAI(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             google_api_key=api_key,
-            temperature=0,
-            max_output_tokens=300,
+            temperature=0.2,
         )
 
     async def process_farmer_query(self, query: str, context: str, lang: str = "HI") -> StructuredAgentResponse:
         system_msg = (
-            "You are Kisan Mitra, a farming assistant. "
-            "RULE: verbal_response MUST be in {lang} only. Never Hindi unless lang=HINDI. "
-            "{farm_registry}"
+            "You are 'Kisan Mitra', an agricultural assistant for Indian farmers. "
+            "ABSOLUTE RULE: Your entire verbal_response MUST be written in {lang} script and language. "
+            "It is FORBIDDEN to respond in Hindi unless the language is explicitly HINDI. "
+            "Do not mix languages. Do not use Hindi words in a Tamil or Telugu response. "
+            "If {lang} is TAMIL, write Tamil. If TELUGU, write Telugu. Etc. "
+            "\n\n{farm_registry}"
         )
         human_msg = (
-            "Query: {query}. Context: {context}.\n"
-            "Actions (set ui_action if matches):\n"
-            "navigate fields|alerts|voice / show_farm farm_id / show_image farm_id / show_soil farm_id / "
-            "switch_language (Tamil=ta-IN,Telugu=te-IN,Hindi=hi-IN,English=en-IN,Kannada=kn-IN,Bengali=bn-IN,Gujarati=gu-IN,Marathi=mr-IN,Punjabi=pa-IN)\n"
-            "Reply in {lang} only."
+            "Query: {query}\n"
+            "Field Context: {context}\n\n"
+            "Actions you can trigger:\n"
+            "- If farmer asks about farms/fields: ui_action navigate to 'fields'\n"
+            "- If farmer wants to open a specific farm: ui_action show_farm with target farm_id\n"
+            "- If farmer asks for drone image: ui_action show_image\n"
+            "- If farmer asks about alerts: ui_action navigate to 'alerts'\n"
+            "- If farmer asks for soil data: ui_action show_soil\n"
+            "- If farmer asks to switch/speak in another language (e.g. 'Tamil mein bolo', 'switch to Telugu', 'speak English'): "
+            "  ui_action switch_language, target BCP-47 code: Tamil=ta-IN, Telugu=te-IN, Hindi=hi-IN, English=en-IN, Kannada=kn-IN, Bengali=bn-IN, Gujarati=gu-IN, Marathi=mr-IN, Punjabi=pa-IN\n\n"
+            "REMEMBER: Respond verbal_response in {lang} ONLY. Not Hindi. Not English. {lang}."
         )
 
         prompt = ChatPromptTemplate.from_messages([
